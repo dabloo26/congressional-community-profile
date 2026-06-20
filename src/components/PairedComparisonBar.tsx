@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { ComparisonMetric } from "../data/communityProfileDemo";
+import { plainLanguageForMetric } from "../data/plainLanguage";
 import {
   barPercent,
   deltaDirection,
@@ -9,12 +11,14 @@ import {
 type Props = {
   metric: ComparisonMetric;
   compact?: boolean;
+  explain?: boolean;
 };
 
 const COMMUNITY = "#1d4ed8";
 const DISTRICT = "#94a3b8";
 
-export function PairedComparisonBar({ metric, compact = false }: Props) {
+export function PairedComparisonBar({ metric, compact = false, explain = false }: Props) {
+  const [showTip, setShowTip] = useState(false);
   const communityPct = barPercent(metric.community, metric);
   const districtPct = barPercent(metric.district, metric);
   const direction = deltaDirection(metric);
@@ -28,17 +32,29 @@ export function PairedComparisonBar({ metric, compact = false }: Props) {
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="text-sm font-medium text-slate-800">{metric.label}</p>
-        {delta && direction !== "similar" && (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              direction === "higher"
-                ? "bg-blue-50 text-blue-700"
-                : "bg-amber-50 text-amber-800"
-            }`}
-          >
-            {delta}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {delta && direction !== "similar" && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                direction === "higher"
+                  ? "bg-blue-50 text-blue-700"
+                  : "bg-amber-50 text-amber-800"
+              }`}
+            >
+              {delta}
+            </span>
+          )}
+          {explain && (
+            <button
+              type="button"
+              onClick={() => setShowTip((v) => !v)}
+              className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+              aria-expanded={showTip}
+            >
+              {showTip ? "Hide" : "What's this?"}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className={`mt-3 space-y-2 ${compact ? "text-xs" : "text-sm"}`}>
@@ -55,6 +71,12 @@ export function PairedComparisonBar({ metric, compact = false }: Props) {
           color={DISTRICT}
         />
       </div>
+
+      {explain && showTip && (
+        <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950">
+          {plainLanguageForMetric(metric)}
+        </p>
+      )}
     </div>
   );
 }
