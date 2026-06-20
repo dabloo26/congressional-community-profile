@@ -1,4 +1,4 @@
-import type { ComparisonMetric, MetricFormat } from "../data/communityProfileDemo";
+import type { ComparisonMetric, MetricFormat } from "../types/community";
 
 export function formatValue(value: number, format: MetricFormat): string {
   switch (format) {

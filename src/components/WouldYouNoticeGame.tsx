@@ -1,14 +1,20 @@
-import { useState } from "react";
-import { noticeGame } from "../data/storytelling";
+import { useEffect, useState } from "react";
+import { useCommunity } from "../context/CommunityContext";
 import { HumanTranslation } from "./HumanTranslation";
 
 export function WouldYouNoticeGame() {
+  const { profile } = useCommunity();
+  const game = profile.noticeGame;
   const [picked, setPicked] = useState<number | null>(null);
   const revealed = picked !== null;
 
+  useEffect(() => {
+    setPicked(null);
+  }, [profile.stats.id]);
+
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+      className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8"
       aria-labelledby="game-title"
     >
       <p className="text-xs font-bold uppercase tracking-wider text-rose-600">
@@ -17,21 +23,21 @@ export function WouldYouNoticeGame() {
       <h2 id="game-title" className="mt-2 font-display text-2xl text-slate-900">
         A quick guessing game
       </h2>
-      <p className="mt-3 text-base leading-relaxed text-slate-700">{noticeGame.prompt}</p>
+      <p className="mt-3 text-base leading-relaxed text-slate-700">{game.prompt}</p>
 
       <div className="mt-5 grid gap-2 sm:grid-cols-2" role="group" aria-label="Your guess">
-        {noticeGame.options.map((option, i) => {
+        {game.options.map((option, i) => {
           const isSelected = picked === i;
-          const isCorrect = i === noticeGame.correctOption;
+          const isCorrect = i === game.correctOption;
           return (
             <button
               key={option}
               type="button"
               disabled={revealed}
               onClick={() => setPicked(i)}
-              className={`rounded-xl border px-4 py-3 text-left text-sm font-medium transition ${
+              className={`rounded-xl border px-4 py-3.5 text-left text-sm font-medium transition ${
                 !revealed
-                  ? "border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50"
+                  ? "border-slate-200 bg-slate-50 hover:border-blue-400 hover:bg-blue-50 hover:shadow-sm"
                   : isSelected && isCorrect
                     ? "border-emerald-400 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200"
                     : isSelected
@@ -51,10 +57,10 @@ export function WouldYouNoticeGame() {
       </div>
 
       {revealed && (
-        <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/50 p-5">
-          <h3 className="font-display text-xl text-blue-900">{noticeGame.revealTitle}</h3>
+        <div className="mt-6 rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-5">
+          <h3 className="font-display text-xl text-blue-900">{game.revealTitle}</h3>
           <ul className="mt-4 space-y-2">
-            {noticeGame.reveals.map((line) => (
+            {game.reveals.map((line) => (
               <li key={line} className="flex gap-2 text-sm text-slate-700">
                 <span className="text-blue-500" aria-hidden>
                   →
@@ -63,13 +69,13 @@ export function WouldYouNoticeGame() {
               </li>
             ))}
           </ul>
-          <HumanTranslation>{noticeGame.humanSummary}</HumanTranslation>
+          <HumanTranslation>{game.humanSummary}</HumanTranslation>
           <button
             type="button"
-            className="mt-4 text-sm font-medium text-blue-700 hover:underline"
+            className="mt-4 text-sm font-semibold text-blue-700 hover:underline"
             onClick={() => setPicked(null)}
           >
-            Play again
+            Play again ↻
           </button>
         </div>
       )}

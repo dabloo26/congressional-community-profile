@@ -1,27 +1,33 @@
-import { communityStory } from "../data/storytelling";
+import { useCommunity } from "../context/CommunityContext";
 
 export function CommunityStory() {
+  const { profile } = useCommunity();
+  const { story, stats } = profile;
+
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-6 shadow-sm sm:p-8"
+      className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
       aria-labelledby="story-title"
     >
-      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-        Community story
-      </p>
+      <div
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-20 blur-3xl"
+        style={{ background: stats.theme.primary }}
+        aria-hidden
+      />
+      <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Community story</p>
       <h2 id="story-title" className="mt-2 font-display text-2xl text-slate-900 sm:text-3xl">
-        {communityStory.title}
+        {story.title}
       </h2>
       <p className="mt-2 text-sm text-slate-500">
-        Not a data dump — a story staffers, journalists, and neighbors might actually retell.
+        For staffers, journalists, and curious neighbors — the version you'd retell at dinner.
       </p>
 
-      <article className="mt-6 space-y-4 border-l-4 border-blue-300 pl-5">
-        {communityStory.paragraphs.map((para, i) => (
+      <article className="relative mt-6 space-y-4 border-l-4 pl-5" style={{ borderColor: stats.theme.primary }}>
+        {story.paragraphs.map((para, i) => (
           <p
             key={i}
             className={`leading-relaxed ${
-              i === communityStory.paragraphs.length - 1
+              i === story.paragraphs.length - 1
                 ? "text-base font-medium text-slate-800"
                 : "text-base text-slate-700"
             }`}

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import type { ComparisonMetric } from "../data/communityProfileDemo";
-import { plainLanguageForMetric } from "../data/plainLanguage";
+import { useCommunity } from "../context/CommunityContext";
+import { plainLanguageForProfile } from "../data/buildProfile";
+import type { ComparisonMetric } from "../types/community";
 import { deltaDirection, formatDelta, formatValue } from "../lib/communityProfileFormat";
 
 type Props = {
@@ -10,9 +11,10 @@ type Props = {
 };
 
 export function InteractiveHighlightCard({ metric, active, onSelect }: Props) {
+  const { profile } = useCommunity();
   const [expanded, setExpanded] = useState(false);
   const direction = deltaDirection(metric);
-  const explanation = plainLanguageForMetric(metric);
+  const explanation = plainLanguageForProfile(profile, metric.id);
 
   return (
     <button
@@ -21,7 +23,7 @@ export function InteractiveHighlightCard({ metric, active, onSelect }: Props) {
         onSelect?.(metric.id);
         setExpanded((v) => !v);
       }}
-      className={`w-full rounded-xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+      className={`w-full rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
         active ? "border-blue-400 ring-2 ring-blue-100" : "border-slate-200"
       }`}
     >
@@ -29,7 +31,7 @@ export function InteractiveHighlightCard({ metric, active, onSelect }: Props) {
         {metric.label}
       </p>
       <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-        <span className="font-display text-3xl text-blue-800">
+        <span className="font-display text-3xl" style={{ color: profile.stats.theme.primary }}>
           {formatValue(metric.community, metric.format)}
         </span>
         <span className="text-sm text-slate-400">vs district</span>

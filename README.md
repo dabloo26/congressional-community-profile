@@ -1,18 +1,21 @@
-# Congressional Community Profile
+# Congressional Community Profile Studio
 
-Concept redesign of a demographic comparison report — **Congressional Community CA-47001** vs **California CD-47**, using ACS 2024 data from the [ProximityOne sample report](https://proximityone.com/da2/da2narrative0647001_0647_2024%205.htm).
+Interactive concept for [Congressional Communities](https://www.congressionalcommunities.org/) — compare **Congressional Communities** to their parent districts with plain-language storytelling, not stacked Census walls.
 
-Built as a portfolio sample for the [Congressional Communities](https://www.congressionalcommunities.org/) Data Visualization Developer contract role.
+**Live demo:** https://dabloo26.github.io/congressional-community-profile/
 
-## What this shows
+## Features
 
-- **At-a-glance headline** — plain-language story up front
-- **Paired comparisons** — community and district on the same row (not stacked charts)
-- **JSON-driven template** — swap `src/data/communityProfileDemo.ts` to render any geography
+- **6 communities** to explore (CA coastal, AZ desert, TX Latino, NY urban, KS rural, GA suburb)
+- CA-47001 uses **real ProximityOne / ACS 2024** figures; others are realistic ACS-style contrasts
+- **If This Community Were a Person**, **100 Neighbors**, **Community Wrapped** badges, guessing game
+- **100-dot neighbor grid** — hover and filter by age, jobs, ethnicity
+- **Before / After** design problem from the job description
+- Every chart ships with a **human translation** (12-year-old test)
 
 ## Stack
 
-React · TypeScript · Vite · Tailwind CSS
+React · TypeScript · Vite · Tailwind CSS · Recharts
 
 ## Local dev
 
@@ -21,19 +24,14 @@ npm install
 npm run dev
 ```
 
-## Deploy (GitHub Pages)
+## Deploy
 
-Live demo: **https://dabloo26.github.io/congressional-community-profile/**
-
-Pushes to `main` deploy automatically via GitHub Actions (`.github/workflows/deploy-pages.yml`).
+Pushes to `main` deploy via GitHub Actions to GitHub Pages.
 
 ```bash
-# Manual build for project-site base path
 VITE_BASE=/congressional-community-profile/ npm run build
 ```
 
-## Application note
+## Adding communities
 
-**Tools:** React + TypeScript + Tailwind with a JSON schema — embeds in an Azure/React site with no per-report hosting cost.
-
-**Approach:** Parse structured output from the data partner into a schema; one component scales to 7,407 sub-districts. Power BI/Figma for design iteration only.
+Edit `src/data/communities.ts` — each entry is raw ACS-style stats; `buildProfile.ts` generates charts, badges, stories, and games automatically.

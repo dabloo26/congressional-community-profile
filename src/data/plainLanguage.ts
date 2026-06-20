@@ -1,4 +1,4 @@
-import type { ComparisonMetric } from "./communityProfileDemo";
+import type { ComparisonMetric } from "../types/community";
 
 /** Plain-language copy for a non-technical audience (e.g. high-school readers). */
 

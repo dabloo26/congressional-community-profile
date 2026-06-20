@@ -1,5 +1,4 @@
-import type { ComparisonMetric } from "../data/communityProfileDemo";
-import { plainLanguageForMetric } from "../data/plainLanguage";
+import type { ComparisonMetric } from "../types/community";
 import {
   barPercent,
   deltaDirection,
@@ -11,12 +10,13 @@ import { HumanTranslation } from "./HumanTranslation";
 type Props = {
   metric: ComparisonMetric;
   compact?: boolean;
+  humanText: string;
 };
 
 const COMMUNITY = "#1d4ed8";
 const DISTRICT = "#94a3b8";
 
-export function PairedComparisonBar({ metric, compact = false }: Props) {
+export function PairedComparisonBar({ metric, compact = false, humanText }: Props) {
   const communityPct = barPercent(metric.community, metric);
   const districtPct = barPercent(metric.district, metric);
   const direction = deltaDirection(metric);
@@ -24,7 +24,7 @@ export function PairedComparisonBar({ metric, compact = false }: Props) {
 
   return (
     <div
-      className={`rounded-lg border border-slate-200 bg-white ${compact ? "p-3" : "p-4"}`}
+      className={`rounded-xl border border-slate-200 bg-white ${compact ? "p-3" : "p-4"} shadow-sm`}
       role="group"
       aria-label={`${metric.label}: community ${formatValue(metric.community, metric.format)}, district ${formatValue(metric.district, metric.format)}`}
     >
@@ -58,7 +58,7 @@ export function PairedComparisonBar({ metric, compact = false }: Props) {
         />
       </div>
 
-      <HumanTranslation className="!text-xs">{plainLanguageForMetric(metric)}</HumanTranslation>
+      <HumanTranslation className="!text-xs">{humanText}</HumanTranslation>
     </div>
   );
 }

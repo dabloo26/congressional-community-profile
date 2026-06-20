@@ -9,8 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { demoCompareMetric } from "../data/chartData";
-import { chartHumanTranslation } from "../data/storytelling";
+import { useCommunity } from "../context/CommunityContext";
 import { beforeAfterCopy as copy } from "../data/plainLanguage";
 import { HumanTranslation } from "./HumanTranslation";
 
@@ -20,21 +19,18 @@ const COMMUNITY = "#1d4ed8";
 const DISTRICT = "#94a3b8";
 
 export function BeforeAfterDemo() {
+  const { profile } = useCommunity();
   const [mode, setMode] = useState<Mode>("after");
+  const pct65 = profile.stats.pct65Plus;
+  const dPct65 = profile.stats.districtPct65Plus;
 
-  const separateCommunity = [{ name: "Community", value: demoCompareMetric.community }];
-  const separateDistrict = [{ name: "District", value: demoCompareMetric.district }];
-  const grouped = [
-    {
-      name: "65+ share",
-      Community: demoCompareMetric.community,
-      District: demoCompareMetric.district,
-    },
-  ];
+  const separateCommunity = [{ name: "Community", value: pct65 }];
+  const separateDistrict = [{ name: "District", value: dPct65 }];
+  const grouped = [{ name: "65+ share", Community: pct65, District: dPct65 }];
 
   return (
     <section
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-lg sm:p-7"
       aria-labelledby="before-after-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -46,16 +42,12 @@ export function BeforeAfterDemo() {
             Before vs after — same data, easier to read
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
-            The job asked for this exact fix: turn stacked, specialist reports into side-by-side
-            comparisons anyone can understand. Tap the buttons to see the difference.
+            Toggle to see how {profile.stats.shortId} fixes the stacked-chart problem from the
+            original ProximityOne-style reports.
           </p>
         </div>
 
-        <div
-          className="flex rounded-xl bg-slate-100 p-1"
-          role="tablist"
-          aria-label="Before or after view"
-        >
+        <div className="flex rounded-xl bg-slate-100 p-1" role="tablist">
           {(["before", "after"] as const).map((key) => (
             <button
               key={key}
@@ -91,31 +83,18 @@ export function BeforeAfterDemo() {
           <ul className="mt-3 space-y-2 text-sm text-slate-700">
             {copy.before.problems.map((line) => (
               <li key={line} className="flex gap-2">
-                <span className="text-rose-500" aria-hidden>
-                  ✕
-                </span>
+                <span className="text-rose-500">✕</span>
                 {line}
               </li>
             ))}
           </ul>
-
           <div className="mt-4 space-y-4 rounded-lg border border-slate-200 bg-white p-3">
             <p className="font-mono text-[11px] leading-relaxed text-slate-500">
-              .. the population 65 years and over was 8,435 (33.9%) for CC CA 47001 compared to
-              125,792 (16.7%) for CD119 CA 47.
+              .. the population 65 years and over was ({pct65}%) for this community compared to (
+              {dPct65}%) for the district.
             </p>
-
-            <div>
-              <p className="mb-1 text-xs font-medium text-slate-500">Chart — Community only</p>
-              <MiniChart data={separateCommunity} color={COMMUNITY} height={100} />
-            </div>
-            <div>
-              <p className="mb-1 text-xs font-medium text-slate-500">Chart — District only</p>
-              <MiniChart data={separateDistrict} color={DISTRICT} height={100} />
-            </div>
-            <p className="text-center text-xs italic text-rose-600">
-              Your eyes have to jump between two charts to compare.
-            </p>
+            <MiniChart data={separateCommunity} color={COMMUNITY} height={100} label="Community only" />
+            <MiniChart data={separateDistrict} color={DISTRICT} height={100} label="District only" />
           </div>
         </div>
 
@@ -132,45 +111,34 @@ export function BeforeAfterDemo() {
           <ul className="mt-3 space-y-2 text-sm text-slate-700">
             {copy.after.wins.map((line) => (
               <li key={line} className="flex gap-2">
-                <span className="text-emerald-500" aria-hidden>
-                  ✓
-                </span>
+                <span className="text-emerald-500">✓</span>
                 {line}
               </li>
             ))}
           </ul>
-
           <div className="mt-4 rounded-lg border border-blue-100 bg-white p-3">
-            <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-900">
-              <strong>Key insight:</strong> About <strong>1 in 3</strong> people here are 65+, vs{" "}
-              <strong>1 in 6</strong> in the whole district — this community is much older.
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <strong>Key insight:</strong> About <strong>1 in {Math.round(100 / pct65)}</strong> people
+              here are 65+, vs <strong>1 in {Math.round(100 / dPct65)}</strong> in the district.
             </div>
-
-            <p className="mt-3 mb-1 text-xs font-medium text-slate-500">
-              One chart — both geographies
-            </p>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={grouped} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis unit="%" tick={{ fontSize: 11 }} domain={[0, 40]} />
-                <Tooltip
-                  formatter={(v) => [`${Number(v)}%`, ""]}
-                  labelFormatter={() => "Share of people 65+"}
-                  contentStyle={{ borderRadius: 8, fontSize: 13 }}
-                />
-                <Bar dataKey="Community" fill={COMMUNITY} radius={[6, 6, 0, 0]} name="Community" />
-                <Bar dataKey="District" fill={DISTRICT} radius={[6, 6, 0, 0]} name="District" />
+                <YAxis unit="%" tick={{ fontSize: 11 }} domain={[0, Math.max(pct65, dPct65) + 8]} />
+                <Tooltip formatter={(v) => [`${Number(v)}%`, ""]} />
+                <Bar dataKey="Community" fill={COMMUNITY} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="District" fill={DISTRICT} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-            <p className="text-center text-xs text-blue-700">
-              Hover the bars — both numbers, one place.
-            </p>
           </div>
         </div>
       </div>
 
-      <HumanTranslation>{chartHumanTranslation.beforeAfter}</HumanTranslation>
+      <HumanTranslation>
+        Same fact, two layouts: split charts make you guess; side-by-side bars show instantly that this
+        community is {pct65 > dPct65 ? "much older" : "different"} on seniors.
+      </HumanTranslation>
     </section>
   );
 }
@@ -179,22 +147,27 @@ function MiniChart({
   data,
   color,
   height,
+  label,
 }: {
   data: { name: string; value: number }[];
   color: string;
   height: number;
+  label: string;
 }) {
   return (
-    <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
-        <XAxis type="number" domain={[0, 40]} unit="%" hide />
-        <YAxis type="category" dataKey="name" width={72} tick={{ fontSize: 11 }} />
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
-          {data.map((_, i) => (
-            <Cell key={i} fill={color} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div>
+      <p className="mb-1 text-xs font-medium text-slate-500">{label}</p>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} layout="vertical" margin={{ left: 8, right: 24 }}>
+          <XAxis type="number" domain={[0, 45]} unit="%" hide />
+          <YAxis type="category" dataKey="name" width={72} tick={{ fontSize: 11 }} />
+          <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
