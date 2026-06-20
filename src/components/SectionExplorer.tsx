@@ -6,7 +6,9 @@ import {
   housingSnapshot,
   raceBreakdown,
 } from "../data/chartData";
-import { ChartTip, ComparisonBarChart } from "./ComparisonBarChart";
+import { chartHumanTranslation } from "../data/storytelling";
+import { ComparisonBarChart } from "./ComparisonBarChart";
+import { HumanTranslation } from "./HumanTranslation";
 import { PairedComparisonBar } from "./PairedComparisonBar";
 
 type Props = {
@@ -31,7 +33,7 @@ const sectionCharts: Record<string, () => JSX.Element> = {
           yUnit="%"
           height={220}
         />
-        <ChartTip text="The gray bar is the whole district; blue is this community. The 65+ gap is the story." />
+        <HumanTranslation>{chartHumanTranslation.age}</HumanTranslation>
       </div>
       <div>
         <h3 className="text-sm font-semibold text-slate-800">Race & ethnicity (approx.)</h3>
@@ -46,7 +48,7 @@ const sectionCharts: Record<string, () => JSX.Element> = {
           height={240}
           layout="vertical"
         />
-        <ChartTip text="This community is less diverse than the district — especially Hispanic and ‘other’ groups." />
+        <HumanTranslation>{chartHumanTranslation.race}</HumanTranslation>
       </div>
     </div>
   ),
@@ -63,7 +65,7 @@ const sectionCharts: Record<string, () => JSX.Element> = {
         yUnit="%"
         height={220}
       />
-      <ChartTip text="More people here finished college — about 7 in 10 vs 6 in 10 district-wide." />
+      <HumanTranslation>{chartHumanTranslation.education}</HumanTranslation>
     </div>
   ),
   economy: () => (
@@ -79,7 +81,7 @@ const sectionCharts: Record<string, () => JSX.Element> = {
         yUnit="%"
         height={220}
       />
-      <ChartTip text="Fewer people working or job-hunting here — common when an area has more retirees." />
+      <HumanTranslation>{chartHumanTranslation.economy}</HumanTranslation>
     </div>
   ),
   housing: () => (
@@ -95,7 +97,7 @@ const sectionCharts: Record<string, () => JSX.Element> = {
         yUnit="%"
         height={200}
       />
-      <ChartTip text="1 in 5 homes here sit empty — often seasonal or second homes in coastal areas." />
+      <HumanTranslation>{chartHumanTranslation.housing}</HumanTranslation>
     </div>
   ),
 };
@@ -171,7 +173,7 @@ export function SectionExplorer({ activeSection, onSectionChange, focusMetricId 
                   : undefined
               }
             >
-              <PairedComparisonBar metric={metric} explain />
+              <PairedComparisonBar metric={metric} />
             </li>
           ))}
         </ul>

@@ -10,7 +10,9 @@ import {
   YAxis,
 } from "recharts";
 import { demoCompareMetric } from "../data/chartData";
+import { chartHumanTranslation } from "../data/storytelling";
 import { beforeAfterCopy as copy } from "../data/plainLanguage";
+import { HumanTranslation } from "./HumanTranslation";
 
 type Mode = "before" | "after";
 
@@ -167,6 +169,8 @@ export function BeforeAfterDemo() {
           </div>
         </div>
       </div>
+
+      <HumanTranslation>{chartHumanTranslation.beforeAfter}</HumanTranslation>
     </section>
   );
 }

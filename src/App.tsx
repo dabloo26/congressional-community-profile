@@ -1,14 +1,20 @@
 import { useCallback, useState } from "react";
 import { BeforeAfterDemo } from "./components/BeforeAfterDemo";
+import { CommunityPersonality } from "./components/CommunityPersonality";
+import { CommunityStory } from "./components/CommunityStory";
 import { GlossaryTip } from "./components/GlossaryTip";
+import { HundredNeighbors } from "./components/HundredNeighbors";
+import { IfThisCommunityWereAPerson } from "./components/IfThisCommunityWereAPerson";
 import { InteractiveHighlightCard } from "./components/InteractiveHighlightCard";
 import { metricSectionMap, SectionExplorer } from "./components/SectionExplorer";
+import { WouldYouNoticeGame } from "./components/WouldYouNoticeGame";
 import {
   communityProfileMeta,
   profileHeadline,
   profileHighlights,
 } from "./data/communityProfileDemo";
 import { friendlyIntro } from "./data/plainLanguage";
+import { designPrinciple } from "./data/storytelling";
 
 export default function App() {
   const [activeSection, setActiveSection] = useState("demographics");
@@ -45,8 +51,11 @@ export default function App() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10">
-        {/* Friendly intro */}
-        <section className="rounded-2xl border border-violet-100 bg-white p-6 shadow-sm sm:p-8">
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-900">
+          {designPrinciple}
+        </p>
+
+        <section className="mt-6 rounded-2xl border border-violet-100 bg-white p-6 shadow-sm sm:p-8">
           <h2 className="font-display text-xl text-slate-900">{friendlyIntro.title}</h2>
           <p className="mt-2 text-base leading-relaxed text-slate-700">{friendlyIntro.body}</p>
           <p className="mt-3 rounded-lg bg-violet-50 px-4 py-3 text-sm leading-relaxed text-violet-900">
@@ -56,12 +65,18 @@ export default function App() {
           </p>
         </section>
 
-        {/* Before / After — the JD problem statement */}
-        <div className="mt-8">
+        <div className="mt-8 space-y-8">
+          <IfThisCommunityWereAPerson />
+          <CommunityStory />
+          <HundredNeighbors />
+          <CommunityPersonality />
+          <WouldYouNoticeGame />
+        </div>
+
+        <div className="mt-10">
           <BeforeAfterDemo />
         </div>
 
-        {/* Headline story */}
         <section className="mt-8 rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
             The short version
@@ -93,13 +108,12 @@ export default function App() {
           </span>
         </div>
 
-        {/* Interactive highlights */}
         <section className="mt-8" aria-labelledby="at-a-glance">
           <h2 id="at-a-glance" className="font-display text-xl text-slate-900">
             Biggest differences — tap any card
           </h2>
           <p className="mt-1 text-sm text-slate-600">
-            Each card jumps you to the full section with charts. Plain English, no jargon required.
+            Each card jumps you to charts and numbers — with a plain-English line every time.
           </p>
           <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {profileHighlights.map((metric) => (
@@ -135,8 +149,9 @@ export default function App() {
             >
               ProximityOne sample report
             </a>
-            . Same JSON-driven template idea — swap data, render any of 7,400+ communities. React +
-            TypeScript for embed on an Azure site.
+            . JSON-driven template — swap data, render any of 7,400+ communities. React +
+            TypeScript for embed on an Azure site. Goal: make users say &ldquo;that&apos;s
+            interesting,&rdquo; not &ldquo;that&apos;s a lot of data.&rdquo;
           </p>
         </aside>
       </main>
