@@ -39,7 +39,7 @@ export function BeforeAfterDemo() {
             The design problem
           </p>
           <h2 id="before-after-title" className="mt-1 font-display text-xl text-slate-900 sm:text-2xl">
-            Before vs after — same data, easier to read
+            Before vs after: same data, easier to read
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-600">
             Toggle to see how {profile.stats.shortId} fixes the stacked-chart problem from the

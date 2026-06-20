@@ -5,7 +5,7 @@ type Props = {
   className?: string;
 };
 
-/** Required companion to every chart or stat — plain language for any age. */
+/** Required companion to every chart or stat. Plain language for any age. */
 export function HumanTranslation({ children, className = "" }: Props) {
   return (
     <p

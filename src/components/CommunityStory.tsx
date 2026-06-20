@@ -19,7 +19,7 @@ export function CommunityStory() {
         {story.title}
       </h2>
       <p className="mt-2 text-sm text-slate-500">
-        For staffers, journalists, and curious neighbors — the version you'd retell at dinner.
+        For staffers, journalists, and curious neighbors. The version you would retell at dinner.
       </p>
 
       <article className="relative mt-6 space-y-4 border-l-4 pl-5" style={{ borderColor: stats.theme.primary }}>

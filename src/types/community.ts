@@ -38,6 +38,21 @@ export type NoticeQuestion = {
   humanSummary: string;
 };
 
+export type SurpriseFact = {
+  emoji: string;
+  headline: string;
+  detail: string;
+};
+
+export type EverydayStory = {
+  id: string;
+  emoji: string;
+  title: string;
+  hook: string;
+  body: string;
+  districtLine: string;
+};
+
 export type CommunityTheme = {
   primary: string;
   secondary: string;
@@ -105,6 +120,25 @@ export type CommunityStats = {
   districtTotalHH: number;
 };
 
+export type CommunityInsights = {
+  justMovedHere: string[];
+  staffBrief: string[];
+  dna: { label: string; score: number }[];
+  personalityType: { emoji: string; label: string; blurb: string };
+  topDifferences: { text: string; emoji: string; sortKey: number }[];
+  busRows: { emoji: string; count: number; label: string }[];
+  weather: { emoji: string; label: string; level: string }[];
+  reportCard: { subject: string; grade: string; note: string }[];
+  surprise: { headline: string; detail: string };
+  similarCommunities: {
+    id: string;
+    name: string;
+    shortId: string;
+    emoji: string;
+    pctMatch: number;
+  }[];
+};
+
 export type CommunityProfile = {
   stats: CommunityStats;
   meta: {
@@ -132,6 +166,9 @@ export type CommunityProfile = {
   badges: PersonalityBadge[];
   noticeGame: NoticeQuestion;
   story: { title: string; paragraphs: string[] };
+  everydayStories: EverydayStory[];
+  surpriseFacts: SurpriseFact[];
+  insights: CommunityInsights;
   metricPlainLanguage: Record<string, string>;
 };
 

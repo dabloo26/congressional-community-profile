@@ -6,6 +6,12 @@ import type {
   PersonalityBadge,
 } from "../types/community";
 import { SOURCE } from "../types/community";
+import {
+  buildEverydayStories,
+  buildSurpriseFacts,
+  buildVividStoryParagraphsWithSummary,
+} from "./storyScenarios";
+import { buildCommunityInsights } from "./communityInsights";
 
 function m(
   id: string,
@@ -36,15 +42,15 @@ function otherRacePct(white: number, hispanic: number) {
 
 function buildPlainLanguage(s: CommunityStats): Record<string, string> {
   return {
-    "median-age": `Half the people here are older than ${s.medianAge}, half younger — the district typical is ${s.districtMedianAge}.`,
+    "median-age": `Half the people here are older than ${s.medianAge}, half younger. The district typical is ${s.districtMedianAge}.`,
     "age-65": `About ${Math.round(s.pct65Plus)} in 100 people are seniors here vs ${Math.round(s.districtPct65Plus)} in the district.`,
     bachelors: `${Math.round(s.pctBachelors)}% of adults finished college here vs ${Math.round(s.districtPctBachelors)}% district-wide.`,
     "white-nh": `This pocket is ${s.pctWhiteNH > s.districtPctWhiteNH ? "less" : "more"} mixed than the district on average.`,
     "labor-force": `${Math.round(s.pctEmployed)} in 100 working-age people have a job here.`,
-    vacant: `${Math.round(s.pctVacant)}% of homes sit empty here — ${s.pctVacant > s.districtPctVacant ? "more" : "fewer"} than the district.`,
-    population: `~${s.population.toLocaleString()} people live here inside a district of ~${s.districtPopulation.toLocaleString()}.`,
+    vacant: `${Math.round(s.pctVacant)}% of homes sit empty here. That is ${s.pctVacant > s.districtPctVacant ? "more" : "fewer"} than the district.`,
+    population: `About ${s.population.toLocaleString()} people live here inside a district of about ${s.districtPopulation.toLocaleString()}.`,
     hispanic: `${Math.round(s.pctHispanic)}% identify as Hispanic or Latino (any race).`,
-    cvap: `Most adults can vote — citizens 18+ are the majority.`,
+    cvap: `Most adults can vote. Citizens 18+ are the majority.`,
     "median-income": `Typical household earns $${Math.round(s.medianIncome / 1000)}k vs $${Math.round(s.districtMedianIncome / 1000)}k in the district.`,
     "median-rent": `Renters typically pay $${s.medianRent.toLocaleString()}/mo vs $${s.districtMedianRent.toLocaleString()} district-wide.`,
     "home-value": `Owners' homes are worth about $${(s.medianHomeValue / 1_000_000).toFixed(1)}M on median.`,
@@ -60,31 +66,31 @@ function buildBadges(s: CommunityStats): PersonalityBadge[] {
     badges.push({
       emoji: "👴",
       title: "Older Population",
-      tagline: `Median age ${s.medianAge} — feels older than the district (${s.districtMedianAge}).`,
+      tagline: `Median age ${s.medianAge}. Feels older than the district (${s.districtMedianAge}).`,
     });
   if (s.medianAge <= s.districtMedianAge - 4)
     badges.push({
       emoji: "🧒",
       title: "Younger Crowd",
-      tagline: `Median age ${s.medianAge} — more kids and young workers than the district norm.`,
+      tagline: `Median age ${s.medianAge}. More kids and young workers than the district norm.`,
     });
   if (s.pctBachelors >= s.districtPctBachelors + 5)
     badges.push({
       emoji: "🎓",
       title: "Highly Educated",
-      tagline: "College degrees are common — diplomas aren't unusual here.",
+      tagline: "College degrees are common. Diplomas are not unusual here.",
     });
   if (s.pctBachelors <= s.districtPctBachelors - 8)
     badges.push({
       emoji: "🛠️",
       title: "Trade & High School",
-      tagline: "Fewer bachelor's degrees — work experience often beats formal college.",
+      tagline: "Fewer bachelor's degrees. Work experience often beats formal college.",
     });
   if (ho >= dHo + 8)
     badges.push({
       emoji: "🏡",
       title: "Homeowner Haven",
-      tagline: "Most families own — lawns and mailboxes, not landlord letters.",
+      tagline: "Most families own. Lawns and mailboxes, not landlord letters.",
     });
   if (ho <= dHo - 12)
     badges.push({
@@ -102,31 +108,31 @@ function buildBadges(s: CommunityStats): PersonalityBadge[] {
     badges.push({
       emoji: "💸",
       title: "Tighter Budgets",
-      tagline: "Typical earnings trail the district — costs still bite.",
+      tagline: "Typical earnings trail the district. Costs still bite.",
     });
   if (s.pctHispanic >= s.districtPctHispanic + 12)
     badges.push({
       emoji: "🌮",
       title: "Latino Heart",
-      tagline: "Hispanic neighbors are the plurality — culture shows up daily.",
+      tagline: "Hispanic neighbors are the plurality. Culture shows up daily.",
     });
   if (s.pctVacant >= s.districtPctVacant + 6)
     badges.push({
       emoji: "🏚️",
       title: "Seasonal Homes",
-      tagline: "Empty houses aren't rare — vacations and second homes.",
+      tagline: "Empty houses are not rare. Vacations and second homes.",
     });
   if (s.population < 40000)
     badges.push({
       emoji: "🏘️",
       title: "Small & Local",
-      tagline: `${s.population.toLocaleString()} people — everyone knows the same grocery aisle.`,
+      tagline: `${s.population.toLocaleString()} people. Everyone knows the same grocery aisle.`,
     });
   if (s.population > 120000)
     badges.push({
       emoji: "🌆",
       title: "Busy & Dense",
-      tagline: `${s.population.toLocaleString()} neighbors — urban energy inside one district slice.`,
+      tagline: `${s.population.toLocaleString()} neighbors. Urban energy inside one district slice.`,
     });
 
   return badges.slice(0, 6);
@@ -140,7 +146,7 @@ function biggestDeltaMetric(s: CommunityStats): {
     {
       label: "More gray hair and retirees",
       score: s.pct65Plus - s.districtPct65Plus,
-      reveal: `Age gap — typical resident is ${s.medianAge} vs ${s.districtMedianAge} in the district.`,
+      reveal: `Age gap. Typical resident is ${s.medianAge} vs ${s.districtMedianAge} in the district.`,
     },
     {
       label: "More renters and apartments",
@@ -152,7 +158,7 @@ function biggestDeltaMetric(s: CommunityStats): {
     {
       label: "A much younger crowd",
       score: s.districtMedianAge - s.medianAge,
-      reveal: `Median age ${s.medianAge} — ${s.medianAge < s.districtMedianAge ? "younger" : "not younger"} than the district.`,
+      reveal: `Median age ${s.medianAge}. ${s.medianAge < s.districtMedianAge ? "Younger" : "Not younger"} than the district.`,
     },
     {
       label: "Hardly any college graduates",
@@ -180,18 +186,18 @@ function buildPerson(s: CommunityStats) {
   const ho = homeownershipPct(s.ownerOccupiedHH, s.totalHH);
   const dHo = homeownershipPct(s.districtOwnerOccupiedHH, s.districtTotalHH);
   const traits: string[] = [
-    `They'd be about ${s.medianAge} years old — ${s.medianAge > s.districtMedianAge ? "noticeably older" : s.medianAge < s.districtMedianAge ? "noticeably younger" : "about the same age"} as the typical district resident (${s.districtMedianAge}).`,
+    `They'd be about ${s.medianAge} years old. That is ${s.medianAge > s.districtMedianAge ? "noticeably older" : s.medianAge < s.districtMedianAge ? "noticeably younger" : "about the same age"} as the typical district resident (${s.districtMedianAge}).`,
     ho > 55
-      ? "They'd probably own their home — ownership is the norm here."
-      : "They'd likely rent — apartments and leases are common.",
+      ? "They'd probably own their home. Ownership is the norm here."
+      : "They'd likely rent. Apartments and leases are common.",
     s.pctBachelors > 50
-      ? "They'd likely have a college degree — most adults here finished four-year school."
+      ? "They'd likely have a college degree. Most adults here finished four-year school."
       : s.pctBachelors > 30
-        ? "They might have some college or a degree — it's mixed."
-        : "They might have learned on the job — college is less common here.",
+        ? "They might have some college or a degree. It is mixed."
+        : "They might have learned on the job. College is less common here.",
     s.medianIncome >= s.districtMedianIncome
       ? "Their household would earn at or above the district middle."
-      : "Their household might earn less than the district average — budgets can be tighter.",
+      : "Their household might earn less than the district average. Budgets can be tighter.",
   ];
 
   const parts: string[] = [];
@@ -210,7 +216,7 @@ function buildPerson(s: CommunityStats) {
     comparedToDistrict:
       parts.length > 0
         ? `Compared to the typical district resident, they'd be ${parts.slice(0, 4).join(", ")}.`
-        : "They're fairly close to the district average — differences are subtle.",
+        : "They are fairly close to the district average. Differences are subtle.",
   };
 }
 
@@ -306,7 +312,7 @@ export function buildCommunityProfile(s: CommunityStatsInput): CommunityProfile 
     ],
     ageBands: [
       { band: "Under 18", community: under18, district: dUnder18 },
-      { band: "18–64", community: age18to64, district: dAge18to64 },
+      { band: "18-64", community: age18to64, district: dAge18to64 },
       { band: "65+", community: s.pct65Plus, district: s.districtPct65Plus },
     ],
     raceBreakdown: [
@@ -342,7 +348,7 @@ export function buildCommunityProfile(s: CommunityStatsInput): CommunityProfile 
         emoji: "🎓",
         count: Math.round(s.pctBachelors),
         line: "adults (25+) have a bachelor's degree",
-        human: `College grads — ${Math.round(s.pctBachelors)} vs ${Math.round(s.districtPctBachelors)} district-wide.`,
+        human: `College grads: ${Math.round(s.pctBachelors)} here vs ${Math.round(s.districtPctBachelors)} district-wide.`,
       },
       {
         emoji: "🏠",
@@ -354,7 +360,7 @@ export function buildCommunityProfile(s: CommunityStatsInput): CommunityProfile 
         emoji: "💼",
         count: Math.round(s.pctEmployed),
         line: "people 16+ have a job",
-        human: `${Math.round(s.pctEmployed)}% employed — shaped by who's retired vs working.`,
+        human: `${Math.round(s.pctEmployed)}% employed. Retirees and workers both shape this number.`,
       },
       {
         emoji: "🌎",
@@ -387,14 +393,11 @@ export function buildCommunityProfile(s: CommunityStatsInput): CommunityProfile 
     },
     story: {
       title: `The story of ${s.name}`,
-      paragraphs: [
-        `Picture two rooms inside ${s.districtName}.`,
-        `In one room, everyone is from the district overall — a mix of ages, incomes, and backgrounds.`,
-        `In the other, everyone is from ${s.name} only.`,
-        s.headlineSummary(),
-        `That's what Census data is really saying — not spreadsheets, but differences you'd notice on a sidewalk.`,
-      ],
+      paragraphs: buildVividStoryParagraphsWithSummary(s, s.headlineSummary()),
     },
+    everydayStories: buildEverydayStories(s),
+    surpriseFacts: buildSurpriseFacts(s),
+    insights: buildCommunityInsights(s),
     metricPlainLanguage: buildPlainLanguage(s),
   };
 }

@@ -14,7 +14,7 @@ export function HundredNeighbors() {
         Out of your next 100 neighbors…
       </h2>
       <p className="mt-2 text-sm text-slate-600">
-        People beat percentages. Here's the guest list for {profile.stats.name}.
+        People beat percentages. Here is the guest list for {profile.stats.name}.
       </p>
 
       <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

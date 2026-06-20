@@ -69,7 +69,7 @@ export function ComparisonBarChart({
               name === communityKey || name === "Community" ? "Community" : "District";
             return [`${Number(value)}${yUnit}`, label];
           }}
-          labelFormatter={(label) => `${label} — hover for numbers; read the green box below for meaning`}
+          labelFormatter={(label) => `${label}. Hover for numbers. Read the green box below for meaning.`}
         />
         <Legend wrapperStyle={{ fontSize: 12 }} />
         {valueKey ? (

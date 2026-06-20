@@ -1,22 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { BeforeAfterDemo } from "./components/BeforeAfterDemo";
 import { CommunityCompareStrip } from "./components/CommunityCompareStrip";
+import { CommunityInsightsHub } from "./components/CommunityInsightsHub";
 import { CommunityPersonality } from "./components/CommunityPersonality";
-import { CommunityPicker } from "./components/CommunityPicker";
+import { CommunitySelector } from "./components/CommunitySelector";
 import { CommunityStory } from "./components/CommunityStory";
-import { GlossaryTip } from "./components/GlossaryTip";
+import { EverydayStories } from "./components/EverydayStories";
 import { HundredNeighbors } from "./components/HundredNeighbors";
+import { GlossaryTip } from "./components/GlossaryTip";
 import { IfThisCommunityWereAPerson } from "./components/IfThisCommunityWereAPerson";
 import { InteractiveHighlightCard } from "./components/InteractiveHighlightCard";
-import { NeighborGrid } from "./components/NeighborGrid";
 import { buildMetricSectionMap, SectionExplorer } from "./components/SectionExplorer";
+import { TextSizeToggle } from "./components/TextSizeToggle";
+import { WhoIsThisFor } from "./components/WhoIsThisFor";
 import { WouldYouNoticeGame } from "./components/WouldYouNoticeGame";
 import { useCommunity } from "./context/CommunityContext";
-import { friendlyIntro } from "./data/plainLanguage";
-import { designPrinciple } from "./data/storytelling";
+import { designPrinciple, friendlyIntro } from "./data/plainLanguage";
 
 function ProfileContent() {
-  const { profile, transitioning } = useCommunity();
+  const { profile, transitioning, textClass } = useCommunity();
   const [activeSection, setActiveSection] = useState("demographics");
   const [focusMetricId, setFocusMetricId] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ function ProfileContent() {
 
   return (
     <div
-      className={`transition-all duration-300 ${transitioning ? "scale-[0.99] opacity-40 blur-[1px]" : "scale-100 opacity-100 blur-0"}`}
+      className={`transition-all duration-300 ${transitioning ? "scale-[0.99] opacity-40 blur-[1px]" : "scale-100 opacity-100 blur-0"} ${textClass}`}
     >
       <section
         className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${t.gradient} px-6 py-10 text-white shadow-2xl sm:px-10 sm:py-12`}
@@ -73,6 +75,12 @@ function ProfileContent() {
               {profile.stats.population.toLocaleString()} residents
             </span>
             <span className="rounded-full bg-white/20 px-4 py-1.5 backdrop-blur-sm">
+              👵 {Math.round(profile.stats.pct65Plus)} of 100 are 65+
+            </span>
+            <span className="rounded-full bg-white/20 px-4 py-1.5 backdrop-blur-sm">
+              🎓 {Math.round(profile.stats.pctBachelors)}% finished college
+            </span>
+            <span className="rounded-full bg-white/20 px-4 py-1.5 backdrop-blur-sm">
               vs {profile.stats.districtName}
             </span>
           </div>
@@ -80,10 +88,11 @@ function ProfileContent() {
       </section>
 
       <div className="mt-8 space-y-8">
+        <CommunityInsightsHub />
         <IfThisCommunityWereAPerson />
-        <CommunityStory />
-        <NeighborGrid />
+        <EverydayStories />
         <HundredNeighbors />
+        <CommunityStory />
         <CommunityPersonality />
         <WouldYouNoticeGame />
       </div>
@@ -106,7 +115,7 @@ function ProfileContent() {
 
       <section className="mt-8" aria-labelledby="at-a-glance">
         <h2 id="at-a-glance" className="font-display text-2xl text-slate-900">
-          Biggest differences — tap any card
+          Biggest differences. Tap any card.
         </h2>
         <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {profile.highlights.map((metric) => (
@@ -157,8 +166,14 @@ export default function App() {
           <p className="mt-2 leading-relaxed text-slate-700">{friendlyIntro.body}</p>
         </section>
 
-        <div className="mt-8">
-          <CommunityPicker />
+        <WhoIsThisFor />
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <TextSizeToggle />
+        </div>
+
+        <div className="mt-6">
+          <CommunitySelector />
         </div>
 
         <ProfileContent />
@@ -168,15 +183,15 @@ export default function App() {
         <aside className="mt-12 rounded-2xl border border-dashed border-slate-300 bg-white/80 p-5 text-sm text-slate-600">
           <p className="font-semibold text-slate-800">Built for Congressional Communities</p>
           <p className="mt-2 leading-relaxed">
-            Six demo profiles (CA-47001 uses real ProximityOne ACS figures; others are realistic
-            ACS-style contrasts). One JSON template scales to 7,400+ communities. React + TypeScript
-            for embed on an Azure site.
+            Six profiles from U.S. Census Bureau ACS data. CA-47001 uses the ProximityOne
+            congressional community report. Other places use Census QuickFacts (2020-2024) compared
+            to their congressional district. One template scales to 7,400+ communities.
           </p>
         </aside>
       </main>
 
       <footer className="border-t border-slate-200/80 bg-white/80 py-8 text-center text-xs text-slate-500 backdrop-blur">
-        <p>U.S. Census Bureau ACS 2024 5-year estimates · Concept by Abhyansh Anand</p>
+        <p>U.S. Census Bureau ACS 5-year estimates · Concept by Abhyansh Anand</p>
       </footer>
     </div>
   );

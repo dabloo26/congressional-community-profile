@@ -16,7 +16,7 @@ export function CommunityPersonality() {
         Your community, wrapped
       </h2>
       <p className="mt-2 max-w-xl text-sm text-white/85">
-        Spotify Wrapped, but for {profile.stats.shortId} — badges pulled from real comparison data.
+        Spotify Wrapped, but for {profile.stats.shortId}. Badges pulled from real comparison data.
       </p>
 
       <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

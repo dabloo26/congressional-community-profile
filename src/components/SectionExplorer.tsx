@@ -13,17 +13,17 @@ type Props = {
 
 const chartHuman = {
   demographics: {
-    age: "Picture two blocks of 100 people — count how many seniors you see on each.",
-    race: "Look at the mix of faces on each block — one may feel much less diverse.",
+    age: "Picture two blocks of 100 people. Count how many seniors you see on each.",
+    race: "Look at the mix of faces on each block. One may feel much less diverse.",
   },
   social: {
     education: "On one block, most grown-ups went to college. On the other, it's common but not the default.",
   },
   economy: {
-    work: "Fewer people rushing to work often means more retirees — not laziness, just life stage.",
+    work: "Fewer people rushing to work often means more retirees. Not laziness, just life stage.",
   },
   housing: {
-    homes: "Empty houses on a block usually mean vacation homes or between tenants — not a ghost town.",
+    homes: "Empty houses on a block usually mean vacation homes or between tenants. Not a ghost town.",
   },
 } as const;
 
