@@ -1,176 +1,250 @@
-import type { CommunityProfile, CommunityStats, CommunityInsights } from "../types/community";
-
-export type DnaDimension = { label: string; score: number };
-
-export type TopDifference = {
-  text: string;
-  emoji: string;
-  sortKey: number;
-};
-
-export type BusRow = {
-  emoji: string;
-  count: number;
-  label: string;
-};
-
-export type WeatherLine = {
-  emoji: string;
-  label: string;
-  level: string;
-};
-
-export type ReportGrade = {
-  subject: string;
-  grade: string;
-  note: string;
-};
-
-export type SimilarCommunity = {
-  id: string;
-  name: string;
-  shortId: string;
-  emoji: string;
-  pctMatch: number;
-};
+import type { CommunityStats, CommunityInsights } from "../types/community";
 
 function homeownershipPct(owner: number, total: number): number {
   return total > 0 ? Math.round((owner / total) * 100) : 0;
 }
 
-function pctLift(community: number, district: number): number {
+function incomeLift(community: number, district: number): number {
   if (district === 0) return 0;
   return Math.round(((community - district) / district) * 100);
 }
 
-function incomeLift(community: number, district: number): number {
-  return pctLift(community, district);
+function starsFromScore(score: number): number {
+  if (score >= 14) return 5;
+  if (score >= 9) return 4;
+  if (score >= 5) return 3;
+  if (score >= 2) return 2;
+  return 1;
 }
 
-function clampScore(n: number): number {
-  return Math.max(1, Math.min(10, Math.round(n)));
+function fmtDelta(n: number, suffix = ""): string {
+  const sign = n > 0 ? "+" : n < 0 ? "" : "";
+  return `${sign}${n}${suffix}`;
 }
 
-function gradeFromDelta(delta: number, thresholds: [string, number][]): string {
-  for (const [grade, min] of thresholds) {
-    if (delta >= min) return grade;
-  }
-  return "C";
-}
-
-function money(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  return `$${Math.round(n / 1000)}k`;
-}
-
-function derivePersonality(s: CommunityStats, ho: number, dHo: number): CommunityInsights["personalityType"] {
-  const under18 = 100 - s.pct18Plus;
-
-  if (s.pct65Plus >= 28 && s.medianAge >= s.districtMedianAge + 6)
-    return {
-      emoji: "🌴",
-      label: "Retirement Community",
-      blurb: "Older residents, slower pace, and housing shaped by owners and seasonal homes.",
-    };
-  if (s.pctBachelors >= s.districtPctBachelors + 12 && s.medianIncome >= s.districtMedianIncome + 15000)
-    return {
-      emoji: "🎓",
-      label: "Education Corridor",
-      blurb: "Degrees are common and paychecks tend to reflect white-collar work.",
-    };
-  if (s.pctHispanic >= 70)
-    return {
-      emoji: "🌎",
-      label: "Diverse Urban Center",
-      blurb: "Latino culture is the default, not the exception, in daily life.",
-    };
-  if (under18 >= 24 && s.medianAge <= s.districtMedianAge - 3)
-    return {
-      emoji: "👨‍👩‍👧",
-      label: "Family-Oriented Community",
-      blurb: "Kids, schools, and young households define the rhythm here.",
-    };
-  if (s.medianIncome >= s.districtMedianIncome + 25000 && ho >= dHo + 5)
-    return {
-      emoji: "🏡",
-      label: "Established Affluent Suburb",
-      blurb: "Owners, higher incomes, and a settled suburban feel.",
-    };
-  if (s.medianAge <= s.districtMedianAge - 4 && s.pctBachelors >= 35)
-    return {
-      emoji: "🚀",
-      label: "Emerging Innovation Hub",
-      blurb: "Younger workers and college grads suggest a changing, upward-moving pocket.",
-    };
-  if (s.medianIncome <= s.districtMedianIncome * 0.75)
-    return {
-      emoji: "🏭",
-      label: "Working-Class City",
-      blurb: "Incomes trail the district. Grit and community ties over glossy stats.",
-    };
-  return {
-    emoji: "🏘️",
-    label: "Mixed Middle Community",
-    blurb: "Close to district averages on most measures. Differences show up in the details.",
-  };
-}
-
-function buildDna(s: CommunityStats, ho: number, dHo: number): DnaDimension[] {
-  const ageScore = clampScore(5 + (s.medianAge - s.districtMedianAge) / 3);
-  const incomeScore = clampScore(5 + (s.medianIncome - s.districtMedianIncome) / 25000);
-  const eduScore = clampScore(4 + (s.pctBachelors - s.districtPctBachelors) / 5);
-  const housingScore = clampScore(4 + (ho - dHo) / 8 + (s.medianHomeValue > s.districtMedianHomeValue ? 1 : -1));
-  const diversityScore = clampScore(4 + Math.abs(s.pctHispanic - s.districtPctHispanic) / 8);
+function buildGlance(s: CommunityStats, ho: number, dHo: number) {
+  const ageGap = s.medianAge - s.districtMedianAge;
+  const incPct = incomeLift(s.medianIncome, s.districtMedianIncome);
+  const eduGap = Math.round(s.pctBachelors - s.districtPctBachelors);
+  const hoGap = ho - dHo;
+  const hisGap = Math.round(s.pctHispanic - s.districtPctHispanic);
 
   return [
-    { label: "Age", score: ageScore },
-    { label: "Income", score: incomeScore },
-    { label: "Education", score: eduScore },
-    { label: "Housing", score: housingScore },
-    { label: "Diversity", score: diversityScore },
+    {
+      label: ageGap >= 0 ? "OLDER" : "YOUNGER",
+      delta: `${ageGap >= 0 ? "+" : ""}${ageGap} years`,
+      direction: Math.abs(ageGap) < 2 ? ("similar" as const) : ageGap > 0 ? ("higher" as const) : ("lower" as const),
+    },
+    {
+      label: incPct >= 0 ? "RICHER" : "LOWER INCOME",
+      delta: `${incPct >= 0 ? "+" : ""}${incPct}%`,
+      direction: Math.abs(incPct) < 5 ? ("similar" as const) : incPct > 0 ? ("higher" as const) : ("lower" as const),
+    },
+    {
+      label: eduGap >= 0 ? "EDUCATED" : "LESS EDUCATED",
+      delta: `${eduGap >= 0 ? "+" : ""}${eduGap}%`,
+      direction: Math.abs(eduGap) < 3 ? ("similar" as const) : eduGap > 0 ? ("higher" as const) : ("lower" as const),
+    },
+    {
+      label: hoGap >= 0 ? "HOMEOWNERS" : "RENTERS",
+      delta: `${hoGap >= 0 ? "+" : ""}${hoGap}%`,
+      direction: Math.abs(hoGap) < 3 ? ("similar" as const) : hoGap > 0 ? ("higher" as const) : ("lower" as const),
+    },
+    {
+      label: hisGap >= 0 ? "LATINO" : "LESS LATINO",
+      delta: `${hisGap >= 0 ? "+" : ""}${hisGap}%`,
+      direction: Math.abs(hisGap) < 4 ? ("similar" as const) : hisGap > 0 ? ("higher" as const) : ("lower" as const),
+    },
   ];
 }
 
-function buildJustMovedHere(s: CommunityStats, ho: number, dHo: number): string[] {
-  const lines: string[] = [
-    `Your average neighbor is about ${s.medianAge} years old (district typical: ${s.districtMedianAge}).`,
-  ];
+function whyAge(_s: CommunityStats, ageGap: number): string {
+  if (ageGap >= 5)
+    return "More demand for healthcare, senior services, and accessible transportation.";
+  if (ageGap >= 2)
+    return "Aging population may shift clinic hours, bus routes, and Medicare casework.";
+  if (ageGap <= -5)
+    return "More demand for schools, childcare, and youth recreation programs.";
+  if (ageGap <= -2)
+    return "Younger mix may need stronger school funding and family support services.";
+  return "Age profile is close to the district. Fewer age-driven service gaps.";
+}
 
-  const eduLift = s.pctBachelors - s.districtPctBachelors;
-  if (eduLift >= 5)
-    lines.push(
-      `They are ${Math.round(eduLift)} percentage points more likely to have a college degree than the typical district resident (${Math.round(s.pctBachelors)}% vs ${Math.round(s.districtPctBachelors)}%).`
-    );
-  else if (eduLift <= -5)
-    lines.push(
-      `College degrees are less common here than district-wide (${Math.round(s.pctBachelors)}% vs ${Math.round(s.districtPctBachelors)}%).`
-    );
-  else
-    lines.push(`College rates are close to the district average (${Math.round(s.pctBachelors)}%).`);
+function whyIncome(_s: CommunityStats, incPct: number): string {
+  if (incPct >= 15)
+    return "Higher tax base potential, but also pressure on affordable housing and cost of living.";
+  if (incPct >= 5)
+    return "Households may have more spending power than district norms.";
+  if (incPct <= -15)
+    return "Higher need for workforce training, wage support, and safety-net referrals.";
+  if (incPct <= -5)
+    return "Residents may feel cost-of-living pressure despite district-wide averages.";
+  return "Income levels track the district. Economic policy priorities look similar.";
+}
 
-  if (ho >= dHo + 8) lines.push("Most people own their homes. Renters are the minority.");
-  else if (ho <= dHo - 8) lines.push("Renters are common. Leases outnumber deeds in many blocks.");
-  else lines.push(`Homeownership (${ho}%) is close to the district (${dHo}%).`);
+function whyEducation(_s: CommunityStats, eduGap: number): string {
+  if (eduGap >= 8)
+    return "Stronger pipeline for professional jobs; libraries and adult education may be well used.";
+  if (eduGap >= 3)
+    return "College access and job training programs may resonate more here than district-wide.";
+  if (eduGap <= -8)
+    return "Higher need for vocational training, ESL, and adult literacy programs.";
+  if (eduGap <= -3)
+    return "Workforce programs and GED support may matter more than four-year college pitches.";
+  return "Education levels mirror the district average.";
+}
 
-  const incDiff = s.medianIncome - s.districtMedianIncome;
-  if (incDiff >= 15000)
-    lines.push(`Household incomes run higher than the district norm (about ${money(s.medianIncome)} vs ${money(s.districtMedianIncome)}).`);
-  else if (incDiff <= -15000)
-    lines.push(`Household incomes trail the district (about ${money(s.medianIncome)} vs ${money(s.districtMedianIncome)}).`);
-  else lines.push(`Typical household income is near the district middle (${money(s.medianIncome)}).`);
+function whyHomeownership(s: CommunityStats, hoGap: number, _ho: number): string {
+  if (hoGap >= 10)
+    return "Stable property tax base, but renters may need stronger tenant protections elsewhere in the district.";
+  if (hoGap >= 4)
+    return "Home repair, property tax, and mortgage relief programs may be relevant.";
+  if (hoGap <= -10)
+    return "Rent stabilization, eviction prevention, and affordable housing are likely top concerns.";
+  if (hoGap <= -4)
+    return "More residents face lease renewals and rent hikes than the district average.";
+  if (s.pctVacant > s.districtPctVacant + 6)
+    return "Empty homes may signal second homes or seasonal use, not just a weak market.";
+  return "Ownership and rental mix is close to the district norm.";
+}
 
-  if (s.pctHispanic >= s.districtPctHispanic + 20)
-    lines.push(`${Math.round(s.pctHispanic)}% of neighbors identify as Hispanic or Latino. Spanish is part of daily life.`);
-  if (s.pct65Plus >= s.districtPct65Plus + 10)
-    lines.push(`Seniors are easy to spot: ${Math.round(s.pct65Plus)} of every 100 people are 65+.`);
+function whyHispanic(_s: CommunityStats, hisGap: number): string {
+  if (hisGap >= 20)
+    return "Bilingual staff, Spanish-language outreach, and immigration services may be essential.";
+  if (hisGap >= 8)
+    return "Outreach in Spanish and culturally specific services may outperform one-size-fits-all messaging.";
+  if (hisGap <= -15)
+    return "This pocket is less Latino than much of the district. Targeted outreach may need adjustment.";
+  if (hisGap <= -5)
+    return "Demographic mix differs from Latino-heavy parts of the same district.";
+  return "Latino share is near the district average.";
+}
 
-  return lines;
+function whyChildren(under18Gap: number): string {
+  if (under18Gap >= 5)
+    return "School capacity, after-school programs, and pediatric care may need extra attention.";
+  if (under18Gap <= -5)
+    return "Fewer children may mean declining school enrollment and less demand for youth programs.";
+  return "Child population share is similar to the district.";
+}
+
+function whyVacancy(_s: CommunityStats, vacGap: number): string {
+  if (vacGap >= 8)
+    return "Vacant units may reflect vacation homes or seasonal patterns. Code enforcement and blight differ from urban vacancy.";
+  if (vacGap >= 4)
+    return "More empty homes than district norms. Watch for maintenance, security, and neighborhood vitality.";
+  if (vacGap <= -4)
+    return "Tighter housing supply than the district. Gentrification and displacement may be live issues.";
+  return "Vacancy rates are in line with the district.";
+}
+
+function whySeniors(_s: CommunityStats, seniorGap: number): string {
+  if (seniorGap >= 10)
+    return "Senior centers, home health, and Medicare navigation may see heavy use.";
+  if (seniorGap >= 5)
+    return "More seniors than district average. Fall prevention and transit to clinics matter.";
+  if (seniorGap <= -5)
+    return "Fewer seniors than district norms. Youth and working-age services may dominate.";
+  return "Senior share tracks the district.";
+}
+
+function buildTopDifferences(s: CommunityStats, ho: number, dHo: number) {
+  const under18 = 100 - s.pct18Plus;
+  const dUnder18 = 100 - s.districtPct18Plus;
+  const items: {
+    emoji: string;
+    stat: string;
+    whyItMatters: string;
+    sortKey: number;
+  }[] = [];
+
+  const ageGap = s.medianAge - s.districtMedianAge;
+  if (Math.abs(ageGap) >= 2) {
+    items.push({
+      emoji: "👴",
+      stat: ageGap >= 0 ? `Median age +${ageGap} years` : `Median age ${ageGap} years`,
+      whyItMatters: whyAge(s, ageGap),
+      sortKey: Math.abs(ageGap) * 3,
+    });
+  }
+
+  const incPct = incomeLift(s.medianIncome, s.districtMedianIncome);
+  if (Math.abs(incPct) >= 8) {
+    items.push({
+      emoji: "💰",
+      stat: `${incPct > 0 ? "+" : ""}${incPct}% median household income`,
+      whyItMatters: whyIncome(s, incPct),
+      sortKey: Math.abs(incPct),
+    });
+  }
+
+  const eduGap = s.pctBachelors - s.districtPctBachelors;
+  if (Math.abs(eduGap) >= 3) {
+    items.push({
+      emoji: "🎓",
+      stat: `${fmtDelta(Math.round(eduGap), "%")} college graduates`,
+      whyItMatters: whyEducation(s, eduGap),
+      sortKey: Math.abs(eduGap) * 2,
+    });
+  }
+
+  const hoGap = ho - dHo;
+  if (Math.abs(hoGap) >= 4) {
+    items.push({
+      emoji: "🏠",
+      stat: `${fmtDelta(hoGap, "%")} homeowners`,
+      whyItMatters: whyHomeownership(s, hoGap, ho),
+      sortKey: Math.abs(hoGap) * 2,
+    });
+  }
+
+  const kidGap = under18 - dUnder18;
+  if (Math.abs(kidGap) >= 3) {
+    items.push({
+      emoji: "👶",
+      stat: `${fmtDelta(Math.round(kidGap), "%")} children under 18`,
+      whyItMatters: whyChildren(kidGap),
+      sortKey: Math.abs(kidGap) * 2,
+    });
+  }
+
+  const hisGap = s.pctHispanic - s.districtPctHispanic;
+  if (Math.abs(hisGap) >= 5) {
+    items.push({
+      emoji: "🌎",
+      stat: `${fmtDelta(Math.round(hisGap), "%")} Hispanic/Latino residents`,
+      whyItMatters: whyHispanic(s, hisGap),
+      sortKey: Math.abs(hisGap),
+    });
+  }
+
+  const vacGap = s.pctVacant - s.districtPctVacant;
+  if (Math.abs(vacGap) >= 4) {
+    items.push({
+      emoji: "🏚️",
+      stat: `${fmtDelta(Math.round(vacGap), "%")} vacant homes`,
+      whyItMatters: whyVacancy(s, vacGap),
+      sortKey: Math.abs(vacGap) * 1.5,
+    });
+  }
+
+  const seniorGap = s.pct65Plus - s.districtPct65Plus;
+  if (Math.abs(seniorGap) >= 5 && Math.abs(ageGap) < 4) {
+    items.push({
+      emoji: "👵",
+      stat: `${fmtDelta(Math.round(seniorGap), "%")} residents age 65+`,
+      whyItMatters: whySeniors(s, seniorGap),
+      sortKey: Math.abs(seniorGap),
+    });
+  }
+
+  return items.sort((a, b) => b.sortKey - a.sortKey).slice(0, 5);
 }
 
 function buildStaffBrief(s: CommunityStats, ho: number, dHo: number): string[] {
   const points: { text: string; weight: number }[] = [];
-
   const ageGap = s.medianAge - s.districtMedianAge;
+
   if (Math.abs(ageGap) >= 4)
     points.push({
       text:
@@ -192,7 +266,7 @@ function buildStaffBrief(s: CommunityStats, ho: number, dHo: number): string[] {
 
   if (ho >= dHo + 10)
     points.push({
-      text: `Homeownership (${ho}%) and owner wealth signals are well above district norms (${dHo}%).`,
+      text: `Homeownership (${ho}%) is well above district norms (${dHo}%).`,
       weight: ho - dHo,
     });
   else if (ho <= dHo - 10)
@@ -206,8 +280,8 @@ function buildStaffBrief(s: CommunityStats, ho: number, dHo: number): string[] {
     points.push({
       text:
         incGap > 0
-          ? `Median household income (${money(s.medianIncome)}) exceeds the district (${money(s.districtMedianIncome)}).`
-          : `Median household income (${money(s.medianIncome)}) lags the district (${money(s.districtMedianIncome)}).`,
+          ? `Median household income exceeds the district by a wide margin.`
+          : `Median household income lags the district significantly.`,
       weight: Math.abs(incGap) / 2000,
     });
 
@@ -221,98 +295,17 @@ function buildStaffBrief(s: CommunityStats, ho: number, dHo: number): string[] {
       weight: Math.abs(hisGap),
     });
 
-  if (s.pctVacant >= s.districtPctVacant + 8)
-    points.push({
-      text: `Vacancy (${Math.round(s.pctVacant)}%) suggests second homes or seasonal patterns above district levels.`,
-      weight: s.pctVacant - s.districtPctVacant,
-    });
-
   if (points.length === 0)
     return [
       "This community tracks close to its district on most headline measures.",
-      "Differences are subtle but show up in age, housing, and education details below.",
-      "Use the top differences list for the fastest briefing.",
+      "Differences are subtle. Use the glance strip and top deviations below.",
+      "Open Explore the data for full ACS tables when you need exact numbers.",
     ];
 
-  return points
-    .sort((a, b) => b.weight - a.weight)
-    .slice(0, 3)
-    .map((p) => p.text);
+  return points.sort((a, b) => b.weight - a.weight).slice(0, 3).map((p) => p.text);
 }
 
-function buildTopDifferences(s: CommunityStats, ho: number, dHo: number): TopDifference[] {
-  const under18 = 100 - s.pct18Plus;
-  const dUnder18 = 100 - s.districtPct18Plus;
-  const diffs: TopDifference[] = [];
-
-  const ageGap = s.medianAge - s.districtMedianAge;
-  if (Math.abs(ageGap) >= 2)
-    diffs.push({
-      emoji: "👴",
-      text: `${ageGap > 0 ? "+" : ""}${ageGap} years older (median age)`,
-      sortKey: Math.abs(ageGap) * 3,
-    });
-
-  const incPct = incomeLift(s.medianIncome, s.districtMedianIncome);
-  if (Math.abs(incPct) >= 8)
-    diffs.push({
-      emoji: "💰",
-      text: `${incPct > 0 ? "+" : ""}${incPct}% ${incPct > 0 ? "higher" : "lower"} income`,
-      sortKey: Math.abs(incPct),
-    });
-
-  const eduGap = s.pctBachelors - s.districtPctBachelors;
-  if (Math.abs(eduGap) >= 3)
-    diffs.push({
-      emoji: "🎓",
-      text: `${eduGap > 0 ? "+" : ""}${Math.round(eduGap)}% more college graduates`,
-      sortKey: Math.abs(eduGap) * 2,
-    });
-
-  const hoGap = ho - dHo;
-  if (Math.abs(hoGap) >= 4)
-    diffs.push({
-      emoji: "🏠",
-      text: `${hoGap > 0 ? "+" : ""}${hoGap}% ${hoGap > 0 ? "more" : "fewer"} homeowners`,
-      sortKey: Math.abs(hoGap) * 2,
-    });
-
-  const kidGap = under18 - dUnder18;
-  if (Math.abs(kidGap) >= 3)
-    diffs.push({
-      emoji: "👶",
-      text: `${kidGap > 0 ? "+" : ""}${Math.round(kidGap)}% ${kidGap > 0 ? "more" : "fewer"} children under 18`,
-      sortKey: Math.abs(kidGap) * 2,
-    });
-
-  const hisGap = s.pctHispanic - s.districtPctHispanic;
-  if (Math.abs(hisGap) >= 5)
-    diffs.push({
-      emoji: "🌎",
-      text: `${hisGap > 0 ? "+" : ""}${Math.round(hisGap)}% more Hispanic/Latino residents`,
-      sortKey: Math.abs(hisGap),
-    });
-
-  const vacGap = s.pctVacant - s.districtPctVacant;
-  if (Math.abs(vacGap) >= 4)
-    diffs.push({
-      emoji: "🏚️",
-      text: `${vacGap > 0 ? "+" : ""}${Math.round(vacGap)}% more vacant homes`,
-      sortKey: Math.abs(vacGap) * 1.5,
-    });
-
-  const seniorGap = s.pct65Plus - s.districtPct65Plus;
-  if (Math.abs(seniorGap) >= 5 && Math.abs(ageGap) < 4)
-    diffs.push({
-      emoji: "👵",
-      text: `${seniorGap > 0 ? "+" : ""}${Math.round(seniorGap)}% more seniors (65+)`,
-      sortKey: Math.abs(seniorGap),
-    });
-
-  return diffs.sort((a, b) => b.sortKey - a.sortKey).slice(0, 5);
-}
-
-function buildBusRows(s: CommunityStats, ho: number): BusRow[] {
+function buildBusRows(s: CommunityStats, ho: number) {
   const under18 = Math.round(100 - s.pct18Plus);
   return [
     { emoji: "🎓", count: Math.round(s.pctBachelors), label: "college graduates (25+)" },
@@ -324,208 +317,89 @@ function buildBusRows(s: CommunityStats, ho: number): BusRow[] {
   ].filter((r) => r.count > 0);
 }
 
-function levelWord(delta: number, labels: [string, string, string]): string {
-  if (delta >= 8) return labels[0];
-  if (delta <= -8) return labels[2];
-  return labels[1];
-}
+function buildPolicyAreas(s: CommunityStats, ho: number, dHo: number) {
+  const ageGap = s.medianAge - s.districtMedianAge;
+  const seniorGap = s.pct65Plus - s.districtPct65Plus;
+  const eduGap = s.pctBachelors - s.districtPctBachelors;
+  const incPct = incomeLift(s.medianIncome, s.districtMedianIncome);
+  const hoGap = ho - dHo;
+  const vacGap = s.pctVacant - s.districtPctVacant;
+  const rentBurden = (s.medianRent * 12) / s.medianIncome;
+  const under18Gap = 100 - s.pct18Plus - (100 - s.districtPct18Plus);
 
-function buildWeather(s: CommunityStats, ho: number, dHo: number): WeatherLine[] {
-  const under18 = 100 - s.pct18Plus;
-  const dUnder18 = 100 - s.districtPct18Plus;
-
-  return [
-    {
-      emoji: "🎓",
-      label: "Education",
-      level: levelWord(s.pctBachelors - s.districtPctBachelors, ["High", "Average", "Low"]),
-    },
-    {
-      emoji: "💰",
-      label: "Income",
-      level: levelWord(incomeLift(s.medianIncome, s.districtMedianIncome), ["Above average", "Average", "Below average"]),
-    },
-    {
-      emoji: "🏡",
-      label: "Homeownership",
-      level: levelWord(ho - dHo, ["Strong", "Moderate", "Weak"]),
-    },
-    {
-      emoji: "👶",
-      label: "Youth population",
-      level: levelWord(under18 - dUnder18, ["High", "Moderate", "Low"]),
-    },
-    {
-      emoji: "📈",
-      label: "Affordability pressure",
-      level:
-        s.medianRent * 12 > s.medianIncome * 0.35
-          ? "High"
-          : s.medianRent * 12 > s.medianIncome * 0.28
-            ? "Moderate"
-            : "Lower",
-    },
-  ];
-}
-
-function buildReportCard(s: CommunityStats, ho: number, dHo: number): ReportGrade[] {
-  const eduDelta = s.pctBachelors - s.districtPctBachelors;
-  const incDelta = incomeLift(s.medianIncome, s.districtMedianIncome);
-  const diversity = Math.max(s.pctHispanic, 100 - s.pctWhiteNH);
+  const healthcareScore = Math.abs(seniorGap) + Math.abs(ageGap) * 2;
+  const housingScore = Math.abs(hoGap) + Math.abs(vacGap) * 1.5 + (rentBurden > 0.32 ? 8 : rentBurden > 0.25 ? 4 : 0);
+  const educationScore = Math.abs(eduGap) + Math.abs(under18Gap) * 0.8;
+  const transitScore = Math.abs(seniorGap) * 0.8 + Math.abs(ageGap) + (s.pctEmployed < s.districtPctEmployed - 5 ? 4 : 0);
+  const econScore = Math.abs(incPct) + Math.abs(s.pctLaborForce - s.districtPctLaborForce);
 
   return [
     {
-      subject: "Education",
-      grade: gradeFromDelta(eduDelta, [["A", 15], ["A-", 10], ["B+", 5], ["B", 0], ["B-", -5], ["C+", -10]]),
-      note: `${Math.round(s.pctBachelors)}% bachelor's vs ${Math.round(s.districtPctBachelors)}% district`,
+      area: "Healthcare",
+      stars: starsFromScore(healthcareScore),
+      reason:
+        seniorGap >= 8 || ageGap >= 6
+          ? "Older population drives clinic, Medicare, and home-health demand."
+          : ageGap <= -5
+            ? "Younger mix means pediatrics and maternal health over senior care."
+            : "Age-driven health needs are moderate for this district slice.",
     },
     {
-      subject: "Income",
-      grade: gradeFromDelta(incDelta, [["A", 25], ["A-", 15], ["B+", 8], ["B", 0], ["B-", -8], ["C+", -15]]),
-      note: `${money(s.medianIncome)} median household`,
+      area: "Housing",
+      stars: starsFromScore(housingScore),
+      reason:
+        hoGap <= -8 || rentBurden > 0.32
+          ? "Renters and cost-burdened households need housing stability focus."
+          : vacGap >= 6
+            ? "Vacancy and second-home patterns shape local housing policy."
+            : hoGap >= 8
+              ? "Owner-heavy area. Property tax and home repair programs matter."
+              : "Housing mix is close to district norms.",
     },
     {
-      subject: "Housing stability",
-      grade: gradeFromDelta(ho - dHo - s.pctVacant + s.districtPctVacant, [["A", 12], ["A-", 8], ["B+", 4], ["B", 0], ["B-", -4], ["C+", -8]]),
-      note: `${ho}% own, ${Math.round(s.pctVacant)}% vacant`,
+      area: "Education",
+      stars: starsFromScore(educationScore),
+      reason:
+        under18Gap >= 5
+          ? "School capacity and youth programs are a top local priority."
+          : Math.abs(eduGap) >= 8
+            ? "College and workforce training gaps stand out vs the district."
+            : "Education needs track district averages.",
     },
     {
-      subject: "Diversity",
-      grade: gradeFromDelta(diversity - 30, [["A", 40], ["A-", 30], ["B+", 20], ["B", 10], ["B-", 0], ["C+", -10]]),
-      note: `${Math.round(s.pctHispanic)}% Hispanic, mixed backgrounds`,
+      area: "Transit",
+      stars: starsFromScore(transitScore),
+      reason:
+        seniorGap >= 10 || ageGap >= 8
+          ? "Seniors need reliable paratransit and clinic access."
+          : s.pctEmployed < s.districtPctEmployed - 6
+            ? "Lower employment may reflect retirees, not transit gaps."
+            : "Commute patterns are similar to the district.",
     },
     {
-      subject: "Age balance",
-      grade: gradeFromDelta(10 - Math.abs(s.medianAge - s.districtMedianAge), [["A", 8], ["A-", 6], ["B+", 4], ["B", 2], ["B-", 0], ["C+", -2]]),
-      note: `Median age ${s.medianAge} (district ${s.districtMedianAge})`,
+      area: "Economic development",
+      stars: starsFromScore(econScore),
+      reason:
+        incPct <= -15
+          ? "Job quality and wage growth may need targeted investment."
+          : incPct >= 15
+            ? "Strong incomes, but watch affordability for lower-wage workers."
+            : eduGap >= 10
+              ? "Educated workforce may attract knowledge-economy employers."
+              : "Economic profile mirrors the district.",
     },
-  ];
+  ].sort((a, b) => b.stars - a.stars);
 }
 
-function buildSurprise(s: CommunityStats, ho: number, dHo: number): CommunityInsights["surprise"] {
-  const candidates: { headline: string; detail: string; score: number }[] = [];
-
-  if (s.medianAge > s.districtMedianAge + 8 && s.medianHomeValue < s.districtMedianHomeValue)
-    candidates.push({
-      headline: "Older, but not the priciest homes",
-      detail: `Median age is ${s.medianAge} (district ${s.districtMedianAge}), yet typical home value (${money(s.medianHomeValue)}) trails the district (${money(s.districtMedianHomeValue)}).`,
-      score: 10,
-    });
-
-  if (s.pctBachelors > s.districtPctBachelors + 15 && s.medianIncome < s.districtMedianIncome)
-    candidates.push({
-      headline: "Educated, but not the richest",
-      detail: `${Math.round(s.pctBachelors)}% have college degrees, yet median income (${money(s.medianIncome)}) sits below the district (${money(s.districtMedianIncome)}).`,
-      score: 9,
-    });
-
-  if (s.medianIncome > s.districtMedianIncome + 20000 && ho < dHo - 10)
-    candidates.push({
-      headline: "High earners, lots of renters",
-      detail: `Incomes are strong (${money(s.medianIncome)}), but only ${ho}% own their home vs ${dHo}% district-wide.`,
-      score: 8,
-    });
-
-  if (s.pctVacant > s.districtPctVacant + 10 && s.medianIncome > s.districtMedianIncome)
-    candidates.push({
-      headline: "Wealthy zip, empty doors",
-      detail: `${Math.round(s.pctVacant)}% of homes are vacant despite above-average incomes. Second homes or seasonal patterns may explain it.`,
-      score: 8,
-    });
-
-  if (s.pctHispanic > 85 && s.pctBachelors < 25)
-    candidates.push({
-      headline: "Deeply Latino, fewer diplomas",
-      detail: `${Math.round(s.pctHispanic)}% Hispanic, but only ${Math.round(s.pctBachelors)}% bachelor's degrees. Culture and credentials tell different stories.`,
-      score: 7,
-    });
-
-  if (s.pctEmployed < s.districtPctEmployed - 8 && s.pct65Plus > s.districtPct65Plus + 10)
-    candidates.push({
-      headline: "Low employment, but it is mostly retirees",
-      detail: `Only ${Math.round(s.pctEmployed)}% employed vs ${Math.round(s.districtPctEmployed)}% district-wide, with ${Math.round(s.pct65Plus)}% seniors. Life stage, not a broken job market.`,
-      score: 7,
-    });
-
-  if (candidates.length === 0) {
-    const top = buildTopDifferences(s, ho, dHo)[0];
-    return {
-      headline: top ? "Biggest stand-out trait" : "Close to district average",
-      detail: top
-        ? `${top.text}. That is the first thing staff notice when comparing to ${s.districtName}.`
-        : `No single metric dominates. This community mirrors its district on most headline numbers.`,
-    };
-  }
-
-  candidates.sort((a, b) => b.score - a.score);
-  return candidates[0];
-}
-
-function similarityVector(s: CommunityStats): number[] {
-  const ho = homeownershipPct(s.ownerOccupiedHH, s.totalHH);
-  return [
-    s.medianAge / 80,
-    s.pctBachelors / 100,
-    s.pctHispanic / 100,
-    s.medianIncome / 200000,
-    ho / 100,
-    s.pct65Plus / 100,
-  ];
-}
-
-function vectorDistance(a: number[], b: number[]): number {
-  return Math.sqrt(a.reduce((sum, v, i) => sum + (v - b[i]) ** 2, 0));
-}
-
-export function findSimilarCommunities(
-  target: CommunityProfile,
-  all: CommunityProfile[]
-): SimilarCommunity[] {
-  const tv = similarityVector(target.stats);
-  return all
-    .filter((c) => c.stats.id !== target.stats.id)
-    .map((c) => {
-      const dist = vectorDistance(tv, similarityVector(c.stats));
-      const pctMatch = Math.round(Math.max(0, 100 - dist * 120));
-      return {
-        id: c.stats.id,
-        name: c.stats.name,
-        shortId: c.stats.shortId,
-        emoji: c.stats.personEmoji,
-        pctMatch,
-      };
-    })
-    .sort((a, b) => b.pctMatch - a.pctMatch)
-    .slice(0, 3);
-}
-
-export function buildCommunityInsights(
-  s: CommunityStats,
-  similarCommunities: SimilarCommunity[] = []
-): CommunityInsights {
+export function buildCommunityInsights(s: CommunityStats): CommunityInsights {
   const ho = homeownershipPct(s.ownerOccupiedHH, s.totalHH);
   const dHo = homeownershipPct(s.districtOwnerOccupiedHH, s.districtTotalHH);
 
   return {
-    justMovedHere: buildJustMovedHere(s, ho, dHo),
     staffBrief: buildStaffBrief(s, ho, dHo),
-    dna: buildDna(s, ho, dHo),
-    personalityType: derivePersonality(s, ho, dHo),
+    glance: buildGlance(s, ho, dHo),
     topDifferences: buildTopDifferences(s, ho, dHo),
     busRows: buildBusRows(s, ho),
-    weather: buildWeather(s, ho, dHo),
-    reportCard: buildReportCard(s, ho, dHo),
-    surprise: buildSurprise(s, ho, dHo),
-    similarCommunities,
+    policyAreas: buildPolicyAreas(s, ho, dHo),
   };
-}
-
-export function attachSimilarityInsights(profiles: CommunityProfile[]): CommunityProfile[] {
-  return profiles.map((p) => ({
-    ...p,
-    insights: {
-      ...p.insights,
-      similarCommunities: findSimilarCommunities(p, profiles),
-    },
-  }));
 }

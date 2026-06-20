@@ -35,6 +35,10 @@ export type PlaceAcs = {
   pctCohabiting?: number;
 };
 
+function estimateCvap(pct18Plus: number): number {
+  return Math.round(pct18Plus * 0.87);
+}
+
 function districtToStats(d: DistrictAcs) {
   const pct18Plus = 100 - d.pctUnder18;
   const ownerHH = Math.round((d.pctOwnerOccupied / 100) * d.totalHouseholds);
@@ -47,7 +51,7 @@ function districtToStats(d: DistrictAcs) {
     pct65Plus: d.pct65Plus,
     pctWhiteNH: d.pctWhiteNH,
     pctHispanic: d.pctHispanic,
-    pctCVAP: 70,
+    pctCVAP: estimateCvap(pct18Plus),
     pctMarried: 47,
     pctCohabiting: 7,
     pctInHouseholds: 97,
@@ -100,7 +104,7 @@ export function placeVsDistrict(
     districtPctWhiteNH: d.pctWhiteNH,
     pctHispanic: place.pctHispanic,
     districtPctHispanic: d.pctHispanic,
-    pctCVAP: 72,
+    pctCVAP: estimateCvap(pct18Plus),
     districtPctCVAP: d.pctCVAP,
     pctMarried: place.pctMarried ?? 47,
     districtPctMarried: d.pctMarried,

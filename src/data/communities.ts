@@ -3,7 +3,6 @@ import type { CommunityProfile } from "../types/community";
 import type { CommunityStatsInput } from "./buildProfile";
 import { acsDistricts } from "./acsDistricts";
 import { placeVsDistrict } from "./fromAcs";
-import { attachSimilarityInsights } from "./communityInsights";
 
 const ACS_VINTAGE = "ACS 5-year estimates, 2020-2024 (U.S. Census Bureau)";
 
@@ -279,7 +278,7 @@ const rawCommunities: CommunityProfile[] = [
   ...acsPlaces.map(buildCommunityProfile),
 ];
 
-export const communities: CommunityProfile[] = attachSimilarityInsights(rawCommunities);
+export const communities: CommunityProfile[] = rawCommunities;
 
 export const defaultCommunityId = communities[0].stats.id;
 

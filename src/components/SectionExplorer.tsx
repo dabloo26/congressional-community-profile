@@ -33,9 +33,9 @@ export function SectionExplorer({ activeSection, onSectionChange, focusMetricId 
   const meta = sectionPlainLanguage[section.id];
 
   return (
-    <section className="mt-10" aria-labelledby="explore-data">
+    <section className="mt-10 scroll-mt-24" aria-labelledby="explore-data" id="section-explore-data">
       <h2 id="explore-data" className="font-display text-xl text-slate-900 sm:text-2xl">
-        Explore the data
+        Explore the full data
       </h2>
       <p className="mt-1 text-sm text-slate-600">
         Charts for {profile.stats.name}. Blue = community, gray = district. Green box = human

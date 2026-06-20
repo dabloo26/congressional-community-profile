@@ -121,22 +121,19 @@ export type CommunityStats = {
 };
 
 export type CommunityInsights = {
-  justMovedHere: string[];
   staffBrief: string[];
-  dna: { label: string; score: number }[];
-  personalityType: { emoji: string; label: string; blurb: string };
-  topDifferences: { text: string; emoji: string; sortKey: number }[];
-  busRows: { emoji: string; count: number; label: string }[];
-  weather: { emoji: string; label: string; level: string }[];
-  reportCard: { subject: string; grade: string; note: string }[];
-  surprise: { headline: string; detail: string };
-  similarCommunities: {
-    id: string;
-    name: string;
-    shortId: string;
-    emoji: string;
-    pctMatch: number;
+  glance: {
+    label: string;
+    delta: string;
+    direction: "higher" | "lower" | "similar";
   }[];
+  topDifferences: {
+    emoji: string;
+    stat: string;
+    whyItMatters: string;
+  }[];
+  busRows: { emoji: string; count: number; label: string }[];
+  policyAreas: { area: string; stars: number; reason: string }[];
 };
 
 export type CommunityProfile = {

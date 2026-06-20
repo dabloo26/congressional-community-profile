@@ -1,15 +1,7 @@
 /** Plain-language copy. Short sentences. No jargon unless explained. */
 
-export const friendlyIntro = {
-  title: "What is this page?",
-  body: "We compare a small area to its whole congressional district. The numbers come from the U.S. Census Bureau (ACS). Think of the district as your whole school and the community as one classroom inside it.",
-};
-
-export const whoIsThisFor = [
-  { who: "Kids / teens", tip: "Start with '100 people on a bus' and the guessing game." },
-  { who: "Adults / seniors", tip: "Read 'You just moved here' and the staff brief at the top." },
-  { who: "Students / researchers", tip: "Use Top 5 deviations and 'Explore the data' for full ACS tables." },
-];
+export const designPrinciple =
+  "The fastest way to understand how one community differs from its district.";
 
 export const beforeAfterCopy = {
   before: {
@@ -67,6 +59,3 @@ export const glossary: Record<string, string> = {
   CVAP: "Citizens age 18+ who can vote.",
   ACS: "American Community Survey. Census Bureau estimates from surveys, updated each year.",
 };
-
-export const designPrinciple =
-  "Every number has a plain-English line below it. If a 12-year-old would not get it, we rewrite it.";
