@@ -23,12 +23,14 @@ npm run dev
 
 ## Deploy (GitHub Pages)
 
+Live demo: **https://dabloo26.github.io/congressional-community-profile/**
+
+Pushes to `main` deploy automatically via GitHub Actions (`.github/workflows/deploy-pages.yml`).
+
 ```bash
-# If repo is github.com/you/congressional-community-profile
+# Manual build for project-site base path
 VITE_BASE=/congressional-community-profile/ npm run build
 ```
-
-Push `dist/` to GitHub Pages, or add a GitHub Actions workflow.
 
 ## Application note
 
